@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import store from '@/store';
 import HomeView from '../views/HomeView.vue';
+import userRoutes from './module/user';
 
 Vue.use(VueRouter);
 
@@ -18,12 +20,28 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
   },
+  ...userRoutes,
 ];
 
 const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.auth) { // 判断是否需要登陆
+    // 判断用户是否登陆
+    if (store.state.userModule.token) {
+      // 判断token有效性，是否过期 需要后台发放token的时候，带上token有效期
+      // 如果token无效，需要请求token
+      next();
+    } else {
+      router.push({ name: 'login' });
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;
